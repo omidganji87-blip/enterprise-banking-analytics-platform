@@ -1,5 +1,7 @@
 # Enterprise Banking Analytics Platform
 
+[![Enterprise Banking Platform CI](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml)
+
 A production-style local data engineering and analytics platform that processes credit-card transaction data through Bronze, Silver, Gold, and analytical serving layers.
 
 The project demonstrates data ingestion, schema validation, data-quality quarantine, dimensional modeling, SQL analytics, automated testing, pipeline orchestration, and an interactive Streamlit dashboard.
@@ -499,6 +501,3 @@ End-to-end orchestration
 Automated test coverage
 ✓
 ```
-# Enterprise Banking Analytics Platform
-
-[![Enterprise Banking Platform CI](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml)
