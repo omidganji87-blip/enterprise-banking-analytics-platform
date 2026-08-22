@@ -499,3 +499,6 @@ End-to-end orchestration
 Automated test coverage
 ✓
 ```
+# Enterprise Banking Analytics Platform
+
+[![Enterprise Banking Platform CI](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml)
