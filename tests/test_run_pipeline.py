@@ -292,6 +292,18 @@ def configure_temporary_pipeline_paths(
                 paths["analytics_path"]
                 / "banking_analytics.duckdb"
             ),
+            "power_bi_date_path": (
+                paths["analytics_path"]
+                / "dim_date_analytics.parquet"
+            ),
+            "power_bi_merchant_path": (
+                paths["analytics_path"]
+                / "dim_merchant_analytics.parquet"
+            ),
+            "power_bi_transaction_path": (
+                paths["analytics_path"]
+                / "fact_transaction_analytics.parquet"
+            ),
         }
     )
 
@@ -509,6 +521,28 @@ def test_run_enterprise_banking_pipeline_with_multiple_files(
         ]
     ) == 6
 
+    assert first_result["power_bi"][
+        "status"
+    ] == "SUCCESS"
+
+    assert first_result["power_bi"][
+        "validation"
+    ]["is_valid"]
+
+    assert first_result["power_bi"][
+        "persisted_validation"
+    ]["is_valid"]
+
+    assert first_result["power_bi"][
+        "validation"
+    ]["transaction_rows"] == 5
+
+    assert paths["power_bi_date_path"].exists()
+    assert paths["power_bi_merchant_path"].exists()
+    assert paths[
+        "power_bi_transaction_path"
+    ].exists()
+
     assert len(
         pd.read_parquet(
             paths["bronze_output_path"]
@@ -565,6 +599,10 @@ def test_run_enterprise_banking_pipeline_with_multiple_files(
     assert second_result["analytics"][
         "platform_kpis"
     ]["total_transactions"] == 5
+
+    assert second_result["power_bi"][
+        "validation"
+    ]["transaction_rows"] == 5
 
     assert len(
         pd.read_parquet(

@@ -2,9 +2,9 @@
 
 [![Enterprise Banking Platform CI](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/workflows/ci.yml)
 
-A production-style local data engineering and analytics platform that processes credit-card transaction data through Bronze, Silver, Gold, and analytical serving layers.
+A production-style local data engineering and analytics platform that processes credit-card transaction data through Bronze, Silver, Gold, analytical, and Power BI publication layers.
 
-The project demonstrates data ingestion, schema validation, data-quality quarantine, dimensional modeling, SQL analytics, automated testing, pipeline orchestration, and an interactive Streamlit dashboard.
+The project demonstrates multi-domain ingestion, schema validation, data-quality quarantine, dimensional modeling, SQL analytics, a tested Power BI serving contract, automated orchestration, and two interactive reporting experiences.
 
 ## Architecture
 
@@ -40,11 +40,23 @@ Analytics Serving Layer
     └── Relationship validation
     │
     ▼
-Streamlit Dashboard
-    ├── Overview
-    ├── Fraud analysis
-    ├── Merchant analysis
-    └── Transaction explorer
+Power BI Publication Layer
+    ├── Curated Parquet tables
+    ├── Derived reporting fields
+    ├── Persisted-model validation
+    └── Explicit BI schema contract
+    │
+    ├──► Enterprise Banking Intelligence Command Center
+    │     ├── Executive Overview
+    │     ├── Risk & Exceptions
+    │     ├── Merchant Risk
+    │     └── Merchant Detail drill-through
+    │
+    └──► Streamlit Dashboard
+          ├── Overview
+          ├── Fraud analysis
+          ├── Merchant analysis
+          └── Transaction explorer
 ```
 
 ## Gold dimensional model
@@ -153,7 +165,30 @@ Important fields include:
 - Calculates platform-level banking KPIs.
 - Closes database connections safely.
 
-### Dashboard
+### Power BI serving layer
+
+- Publishes an explicit three-table reporting contract from Gold.
+- Adds `calendar_year_month` and its numeric sort field.
+- Adds a Boolean `has_error` business flag.
+- Reconciles source and serving row counts.
+- Validates primary keys and both star-schema relationships.
+- Reconciles transaction amount, fraud count, and error count to Gold.
+- Writes typed and compressed Parquet files inside the project.
+- Reloads every published file and proves that persistence preserved the data.
+- Runs automatically as Stage 6 of the end-to-end pipeline.
+
+### Reporting applications
+
+The Power BI Command Center provides:
+
+- An executive KPI and trend overview
+- Risk and operational-exception analysis
+- Fraud exposure and year-over-year comparisons
+- Merchant category and geographic risk analysis
+- Synchronized date filtering
+- Page navigation and clear-filter controls
+- A hidden merchant drill-through destination
+- A curated measures table and star-schema semantic model
 
 The Streamlit dashboard provides:
 
@@ -181,7 +216,8 @@ Enterprise-Banking-Analytics-Platform/
 │   └── source_schemas.py
 │
 ├── dashboard/
-│   └── app.py
+│   ├── app.py
+│   └── Enterprise_Banking_Intelligence_Command_Center.pbix
 │
 ├── data/
 │   ├── landing/
@@ -198,7 +234,11 @@ Enterprise-Banking-Analytics-Platform/
 │   ├── 02_bronze_ingestion.ipynb
 │   ├── 03_silver_transformation.ipynb
 │   ├── 04_gold_data_model.ipynb
-│   └── 05_gold_analytics.ipynb
+│   ├── 05_gold_analytics.ipynb
+│   └── 06_power_bi_serving_layer.ipynb
+│
+├── docs/
+│   └── power_bi_runbook.md
 │
 ├── pipelines/
 │   └── run_pipeline.py
@@ -209,6 +249,7 @@ Enterprise-Banking-Analytics-Platform/
 │   ├── bronze_ingestion.py
 │   ├── gold_data_model.py
 │   ├── metadata_control.py
+│   ├── power_bi_serving.py
 │   ├── schema_validation.py
 │   └── silver_transformation.py
 │
@@ -216,6 +257,7 @@ Enterprise-Banking-Analytics-Platform/
 │   ├── test_analytics_serving.py
 │   ├── test_bronze_ingestion.py
 │   ├── test_gold_data_model.py
+│   ├── test_power_bi_serving.py
 │   ├── test_run_pipeline.py
 │   ├── test_schema_validation.py
 │   └── test_silver_transformation.py
@@ -234,6 +276,9 @@ Enterprise-Banking-Analytics-Platform/
 - DuckDB
 - Streamlit
 - Plotly
+- Power BI Desktop
+- Power Query M
+- DAX
 - pytest
 - Jupyter and VS Code notebooks
 
@@ -304,10 +349,12 @@ python -m pipelines.run_pipeline
 The pipeline executes:
 
 ```text
-Stage 1 — Bronze ingestion
-Stage 2 — Silver transformation
-Stage 3 — Gold dimensional model
-Stage 4 — Analytics serving layer
+Stage 1 — Transaction Bronze ingestion
+Stage 2 — Card and user Bronze ingestion
+Stage 3 — Silver transformation and quarantine
+Stage 4 — Gold dimensional model
+Stage 5 — DuckDB analytics serving layer
+Stage 6 — Power BI Parquet serving layer
 ```
 
 A successful execution ends with:
@@ -322,7 +369,28 @@ When the source file was previously processed successfully, the Bronze stage ret
 Bronze status: SKIPPED
 ```
 
-This is expected idempotent behavior. The persisted Bronze output continues through Silver, Gold, and Analytics.
+This is expected idempotent behavior. The persisted Bronze output continues through Silver, Gold, Analytics, and Power BI publication.
+
+## Open and refresh the Power BI report
+
+Run the complete pipeline before refreshing Power BI. Then open:
+
+```text
+dashboard/Enterprise_Banking_Intelligence_Command_Center.pbix
+```
+
+In Power BI Desktop, select **Home > Refresh**. The report reads these three
+project-managed files:
+
+```text
+data/analytics/dim_date_analytics.parquet
+data/analytics/dim_merchant_analytics.parquet
+data/analytics/fact_transaction_analytics.parquet
+```
+
+For a detailed, repeatable training guide covering import queries, Power Query,
+relationships, sort columns, DAX, page design, refresh, validation, and
+troubleshooting, see [Power BI Serving Layer and Dashboard Runbook](docs/power_bi_runbook.md).
 
 ## Run the dashboard
 
@@ -363,7 +431,7 @@ python -m pytest -q
 Current validated result:
 
 ```text
-22 passed
+54 passed
 ```
 
 Run an individual test module with:
@@ -386,11 +454,13 @@ Date dimension rows:          6,390
 Transaction fact rows:        19,963
 Fraudulent transactions:      27
 Fraud transaction rate:       0.14%
+Error transactions:           574
 Total transaction amount:     1,622,991.69
 Average transaction amount:   81.30
 ```
 
-All persisted Gold primary-key and foreign-key validations pass.
+All persisted Gold and Power BI primary-key, foreign-key, row-count, fraud,
+error, and monetary-control validations pass.
 
 ## Analytics views
 
@@ -412,6 +482,32 @@ data/analytics/banking_analytics.duckdb
 ```
 
 The database contains view definitions. The primary analytical data remains in the Gold Parquet files.
+
+## Power BI semantic model
+
+The report imports three curated Parquet tables:
+
+```text
+dim_date_analytics[date_key]          1 ─── * fact_transaction_analytics[date_key]
+dim_merchant_analytics[merchant_key]  1 ─── * fact_transaction_analytics[merchant_key]
+```
+
+Both relationships use single-direction filtering from the dimensions to the
+fact. `dim_date_analytics` is marked as the Date table using `full_date`.
+Business calculations are stored in a dedicated `_Measures` table.
+
+Current validated publication controls:
+
+```text
+Power BI date rows:                 6,390
+Power BI merchant rows:            1,106
+Power BI transaction rows:        19,963
+Invalid date foreign keys:             0
+Invalid merchant foreign keys:         0
+Power BI error transactions:         574
+Power BI fraud transactions:          27
+Power BI transaction amount: 1,622,991.69
+```
 
 ## Data-quality behavior
 
@@ -449,6 +545,8 @@ Quarantine rows
 - Do not commit transaction data, Parquet files, DuckDB databases, secrets, or logs.
 - Run the complete test suite after changing dependencies.
 - Rebuild the analytics serving layer after changing Gold outputs.
+- Update and test the Power BI serving contract before refreshing the PBIX after a Gold schema change.
+- Keep Power BI query sources inside `data/analytics`; do not use temporary drive-root files.
 - The local dashboard should not be deployed until cloud-compatible data storage and paths are configured.
 
 ## Future enhancements
@@ -468,6 +566,9 @@ Potential next phases include:
 - Managed orchestration
 - Dashboard authentication
 - Cloud dashboard deployment
+- Power BI deployment pipelines and environment parameters
+- Row-level security and governed workspace publication
+- Automated semantic-model metadata checks
 
 ## Project status
 
@@ -490,6 +591,12 @@ Persisted data-quality validation
 ✓
 
 DuckDB analytics serving
+✓
+
+Validated Power BI serving contract
+✓
+
+Enterprise Power BI Command Center
 ✓
 
 Interactive Streamlit dashboard

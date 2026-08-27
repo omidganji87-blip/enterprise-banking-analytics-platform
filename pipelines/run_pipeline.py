@@ -17,6 +17,9 @@ from configs.source_schemas import (
 from src.analytics_serving import build_analytics_serving_layer
 from src.bronze_ingestion import ingest_landing_csv_files
 from src.gold_data_model import build_gold_data_model
+from src.power_bi_serving import (
+    build_power_bi_serving_layer,
+)
 from src.silver_transformation import transform_bronze_to_silver
 
 
@@ -122,6 +125,10 @@ def _print_pipeline_summary(
 
     analytics_result = pipeline_result[
         "analytics"
+    ]
+
+    power_bi_result = pipeline_result[
+        "power_bi"
     ]
 
     print()
@@ -262,6 +269,34 @@ def _print_pipeline_summary(
         ]["is_valid"],
     )
 
+    print(
+        "Power BI transaction rows:",
+        power_bi_result[
+            "validation"
+        ]["transaction_rows"],
+    )
+
+    print(
+        "Power BI error transactions:",
+        power_bi_result[
+            "validation"
+        ]["error_transaction_count"],
+    )
+
+    print(
+        "Power BI model validation:",
+        power_bi_result[
+            "validation"
+        ]["is_valid"],
+    )
+
+    print(
+        "Power BI persisted validation:",
+        power_bi_result[
+            "persisted_validation"
+        ]["is_valid"],
+    )
+
     print("=" * 70)
 
 
@@ -285,6 +320,7 @@ def run_enterprise_banking_pipeline() -> dict:
         -> Silver cleaning and quarantine
         -> Gold dimensional model
         -> DuckDB analytics serving layer
+        -> Power BI Parquet serving model
 
     Downstream publication is allowed only when every required
     upstream Bronze domain succeeds.
@@ -466,6 +502,55 @@ def run_enterprise_banking_pipeline() -> dict:
             "failed."
         )
 
+    # --------------------------------------------------------
+    # Stage 6: Power BI serving layer
+    # --------------------------------------------------------
+
+    _print_stage(
+        6,
+        "POWER BI SERVING LAYER",
+    )
+
+    power_bi_result = (
+        build_power_bi_serving_layer(
+            merchant_input_path=(
+                MERCHANT_OUTPUT_PATH
+            ),
+            date_input_path=(
+                DATE_OUTPUT_PATH
+            ),
+            transaction_input_path=(
+                TRANSACTION_OUTPUT_PATH
+            ),
+            output_directory=(
+                ANALYTICS_PATH
+            ),
+        )
+    )
+
+    pprint(power_bi_result)
+
+    _require_success(
+        "Power BI serving layer",
+        power_bi_result,
+    )
+
+    if not power_bi_result[
+        "validation"
+    ]["is_valid"]:
+        raise RuntimeError(
+            "Power BI serving-layer validation "
+            "failed."
+        )
+
+    if not power_bi_result[
+        "persisted_validation"
+    ]["is_valid"]:
+        raise RuntimeError(
+            "Persisted Power BI validation "
+            "failed."
+        )
+
     pipeline_result = {
         "status": "SUCCESS",
         "bronze": bronze_result,
@@ -475,6 +560,7 @@ def run_enterprise_banking_pipeline() -> dict:
         "silver": silver_result,
         "gold": gold_result,
         "analytics": analytics_result,
+        "power_bi": power_bi_result,
     }
 
     _print_pipeline_summary(
