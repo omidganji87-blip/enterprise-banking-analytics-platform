@@ -124,12 +124,35 @@ and 6.13% amount growth.
 | Prior Year Transaction Amount | $1,529,197.77 |
 | Amount YoY Growth | 6.13353759% |
 
+## Keyboard tab-order audit on 2026-08-29
+
+The Power BI Selection pane exposed the current keyboard sequence without
+changing the report. The primary pages currently place the date slicer after
+the charts, so the sequence does not yet follow the visual information
+hierarchy.
+
+| Page | Current sequence |
+|---|---|
+| Executive Overview | Clear-all button; page navigator; legacy card group; Transaction Method Mix; Transaction Volume & Value Trend; date slicer; header text; new card group |
+| Risk & Exceptions | Clear-all button; page navigator; Error Type Breakdown; Fraud & Error Event Trend; date slicer; header text; new card group |
+| Merchant Risk | Clear-all button; page navigator; Top 10 Fraudulent Merchants; Fraud by Merchant Category; date slicer; header text; new card group |
+| Merchant Detail | Back button; profile card; Transaction Evidence Ledger; Fraud Concentration by Merchant State; date slicer; header text; KPI card group |
+
+Professional target order for each primary page is page navigation, clear-all
+control, date slicer, KPI cards, then analytical charts in normal reading order.
+Merchant Detail should use Back, date slicer, selected-merchant profile, KPI
+cards, then the evidence ledger. Decorative or unused visuals should be removed
+from keyboard focus; the Merchant Detail state-concentration visual should be
+verified because it appeared in tab order but was not visible on the inspected
+canvas.
+
 ## Open findings
 
 | Priority | Finding | Required action |
 |---|---|---|
 | Medium | Fraud Exposure displayed with an ellipsis at the inspected Desktop canvas size | Increase value area, reduce display text size, or use compact display units; verify again at the target service resolution |
-| Medium | Custom alt text and keyboard tab order were not fully verified for every visual | Use the Selection and Tab order panes, then test with keyboard-only navigation and a screen reader |
+| Medium | The current keyboard order places charts before the date slicer and KPI group on all primary pages | Reorder each page to follow navigation, filters, KPIs, charts, and supporting detail; then test with keyboard-only navigation |
+| Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
 | Medium | Mobile layout was not visually validated | Complete and test the phone layout or explicitly document desktop-only scope |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
 | Low | Published-service rendering was unavailable during this audit | Repeat the four-page visual check in Power BI Service after the next successful refresh |
@@ -139,8 +162,9 @@ and 6.13% amount growth.
 
 - [ ] Resolve Fraud Exposure truncation.
 - [ ] Verify every visual title and custom alt-text description.
-- [ ] Verify keyboard tab order follows navigation, slicers, KPIs, charts, then
-  supporting detail.
+- [x] Audit the current keyboard tab order on all four pages.
+- [ ] Reorder keyboard focus to navigation, slicers, KPIs, charts, then
+  supporting detail; verify the final sequence with keyboard-only navigation.
 - [ ] Validate color contrast and non-color risk cues.
 - [ ] Test clear-all-slicers behavior on every primary page.
 - [ ] Test synchronized date slicers across all primary pages.
