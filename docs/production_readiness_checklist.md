@@ -9,7 +9,7 @@ changes the pipeline, semantic model, report, gateway, or schedule.
 | Gate | State | Acceptance evidence | Remaining action |
 |---|---|---|---|
 | Data contracts and transformations | Complete | Bronze, Silver, Gold, Analytics, and Power BI layers execute successfully; persisted model validation is true | Re-run after any schema change |
-| Automated Python quality | Complete | 54 tests pass; dependency check and module compilation pass | Keep CI green on every change |
+| Automated Python quality | Complete | 54 tests pass locally; dependency check and module compilation pass; GitHub Actions [run #7](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/runs/33235383573) succeeded on 2026-08-29 | Keep CI green on every change |
 | Power BI serving contract | Complete | Three canonical Parquet files exist under `data/analytics`; row counts, keys, fraud, errors, and amount reconcile | Revalidate after Gold or DAX contract changes |
 | Guarded local production run | Complete | Verified pre-run backup, full test run, six pipeline stages, publication hashes, atomic status, and 14-day retention | Monitor each scheduled run |
 | Failure recovery | Complete | Controlled failure returned exit code 1 and restored all three publications with unchanged SHA-256 hashes | Repeat after changing recovery logic |
@@ -17,8 +17,10 @@ changes the pipeline, semantic model, report, gateway, or schedule.
 | Gateway availability | Complete | `PBIEgwService` is running and three Parquet mappings were configured | Keep the workstation and gateway online for refresh |
 | Power BI Service schedule | Configured; live acceptance pending | Daily 06:00 America/Toronto refresh is configured | Verify refresh history after the first complete unattended 05:00/06:00 cycle |
 | Report control totals | Complete for current sample | 19,963 transactions, 1,622,991.69 amount, 27 fraud transactions, and 574 error transactions | Reconcile after each changed publication |
+| Report performance | Desktop baseline complete; service acceptance pending | All four pages were measured with Performance Analyzer; warm visual maximum was 818 ms | Repeat cold- and warm-cache tests in Power BI Service |
 | Report design and accessibility | Structurally audited; final live audit pending | Four-page Executive, Risk, Merchant, and drill-through flow was inspected in Power BI Desktop | Resolve Fraud Exposure truncation; audit keyboard order, alt text, contrast, mobile layout, interactions, tooltips, and service rendering |
 | Security and governed distribution | Planned | Workspace publication exists | Define audiences, row-level security, sensitivity label, app distribution, and least-privilege ownership before real banking data |
+| Version control and CI | Complete for current code and documentation | Production automation, operational controls, semantic inventory, and report QA commits are on `main`; GitHub Actions [run #7](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/runs/33235383573) succeeded | Deliberately review the locally modified PBIX before its next commit |
 | Final delivery audit | Pending | Local technical gates are documented | Complete live service history, report UX/accessibility, security, and clean repository review |
 
 ## Reproducible validation commands
