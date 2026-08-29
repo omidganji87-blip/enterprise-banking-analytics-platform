@@ -142,9 +142,9 @@ Professional target order for each primary page is page navigation, clear-all
 control, date slicer, KPI cards, then analytical charts in normal reading order.
 Merchant Detail should use Back, date slicer, selected-merchant profile, KPI
 cards, then the evidence ledger. Decorative or unused visuals should be removed
-from keyboard focus; the Merchant Detail state-concentration visual should be
-verified because it appeared in tab order but was not visible on the inspected
-canvas.
+from keyboard focus. The Layer order pane confirmed that Merchant Detail's
+`Fraud Concentration by Merchant State` visual is hidden, while the Tab order
+pane confirmed that it remains keyboard-focusable.
 
 ## Mobile layout audit on 2026-08-29
 
@@ -159,6 +159,7 @@ returned the report to the unchanged Executive Overview desktop canvas.
 |---|---|---|
 | Medium | Fraud Exposure displayed with an ellipsis at the inspected Desktop canvas size | Increase value area, reduce display text size, or use compact display units; verify again at the target service resolution |
 | Medium | The current keyboard order places charts before the date slicer and KPI group on all primary pages | Reorder each page to follow navigation, filters, KPIs, charts, and supporting detail; then test with keyboard-only navigation |
+| Medium | Hidden Merchant Detail state-concentration visual remains in keyboard tab order | Remove it from tab order, or make it visible and place it deliberately in the page's reading sequence |
 | Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
 | Medium | Executive Overview has no authored mobile layout | Build and test a deliberate phone layout for each user-facing page, or explicitly document desktop-only scope |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
@@ -172,6 +173,8 @@ returned the report to the unchanged Executive Overview desktop canvas.
 - [x] Audit the current keyboard tab order on all four pages.
 - [ ] Reorder keyboard focus to navigation, slicers, KPIs, charts, then
   supporting detail; verify the final sequence with keyboard-only navigation.
+- [ ] Remove the hidden Merchant Detail state-concentration visual from tab
+  order, or make the visual visible and position it deliberately.
 - [ ] Validate color contrast and non-color risk cues.
 - [ ] Test clear-all-slicers behavior on every primary page.
 - [ ] Test synchronized date slicers across all primary pages.
