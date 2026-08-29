@@ -197,6 +197,32 @@ excluded from focus and does not need a user-facing description. A final
 assistive-technology acceptance session is still required on the published
 release.
 
+Three automated package tests now protect the report artifact in CI. They verify
+the required PBIX entries, exact-safe merchant display contract, absence of
+automatic-date references, and presence of all seven expected descriptions.
+
+## Local contrast and non-color cue review on 2026-08-29
+
+The packaged base theme was inspected directly. Standard foreground text is
+`#252423` on `#FFFFFF`, a 15.49:1 contrast ratio. The principal blue, orange,
+red, teal, and green data colors range from 3.02:1 to 5.65:1 against white,
+meeting the 3:1 graphical-object threshold. The lower-ratio accents are used for
+chart marks and large KPI values, not body copy.
+
+Risk meaning is not encoded by color alone: KPI labels name each metric, bar
+charts retain category and value labels, and the fraud/error time series uses a
+marked line against columns as well as a legend. Published high-contrast-mode
+and target-device inspection remains an acceptance check.
+
+## Local cross-filter interaction QA on 2026-08-29
+
+Selecting the `SWIPE` segment in Transaction Method Mix filtered the Executive
+Overview KPIs from 20K transactions, $1.62M amount, $81.30 average, 0.14% fraud
+rate, and 6.13% growth to 16K, $1.30M, $81.76, 0.07%, and 3.69%. The transaction
+trend also responded, and selecting the segment again restored the control
+totals. This confirms the representative chart-to-chart and chart-to-card
+interaction path in the corrected local PBIX.
+
 ## Mobile layout remediation on 2026-08-29
 
 Power BI's phone-layout generator was run for all four report pages. Each phone
@@ -210,7 +236,7 @@ app validation remains a release acceptance check.
 
 | Priority | Finding | Required action |
 |---|---|---|
-| Medium | Custom alt text is implemented locally, but end-to-end assistive-technology acceptance is pending | Publish the corrected PBIX and test all four pages with the target screen reader and browser combination |
+| Medium | Custom alt text and standard-theme contrast are implemented locally, but end-to-end assistive-technology acceptance is pending | Publish the corrected PBIX and test all four pages with the target screen reader, browser, and Windows high-contrast combination |
 | Medium | Generated phone layouts have not been tested on target physical devices | Validate all four pages in the Power BI mobile app and refine spacing if needed |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
 | High | Published service is stale after two gateway-offline refresh failures | Keep the signed-in gateway workstation powered on and verify the next unattended 05:00/06:00 cycle |
@@ -230,12 +256,17 @@ app validation remains a release acceptance check.
   reader session.
 - [x] Remove the hidden Merchant Detail state-concentration visual from tab
   order, or make the visual visible and position it deliberately.
-- [ ] Validate color contrast and non-color risk cues.
+- [x] Validate standard-theme contrast ratios and non-color risk cues at the
+  report-definition level.
+- [ ] Validate the published report with the target Windows/browser high-
+  contrast configuration.
 - [x] Test clear-all-slicers behavior in the published primary-page flow.
 - [x] Test synchronized date slicers across the published primary-page flow.
 - [x] Test Merchant Risk to Merchant Detail drill-through and Back behavior in
   the corrected local PBIX; repeat it in the service after publication.
-- [ ] Test all tooltips and cross-filter interactions.
+- [x] Test a representative Executive Overview cross-filter interaction and
+  confirm control-total restoration.
+- [ ] Test all tooltips and cross-filter interactions in the published release.
 - [x] Audit whether a phone layout currently exists.
 - [x] Build phone layouts for all four user-facing pages.
 - [ ] Validate the generated phone layouts on target physical devices.
