@@ -1,8 +1,9 @@
 # Power BI Report QA
 
-This checklist records structural and visual observations from the local Power
-BI Desktop report. It complements data-model validation; it does not replace a
-published-service, accessibility, or security review.
+This checklist records structural and visual observations from Power BI Desktop
+and the published Power BI Service report. It complements data-model
+validation; it does not replace final accessibility, device, or security
+acceptance.
 
 ## Page inventory reviewed on 2026-08-29
 
@@ -41,7 +42,13 @@ published-service, accessibility, or security review.
 - Transaction Count, Total Transaction Amount, Average Transaction Amount,
   Fraud Rate, and Fraud Transaction Count cards.
 - Transaction Evidence Ledger provides transaction-level detail.
-- `merchant_id` is configured in the drill-through filter well.
+- The local report now uses `merchant_display_label` as the drill-through key
+  and as the first column of the evidence ledger. The ledger header is renamed
+  **Merchant Label**, while `merchant_id_text` remains available to the selected-
+  merchant profile when the exact source identifier is needed.
+- A local end-to-end drill-through from `MRC-000028` returned three matching
+  evidence rows, preserved the compact label, displayed the exact source ID in
+  the merchant profile, and returned to Merchant Risk through the Back control.
 
 ## Confirmed design strengths
 
@@ -101,6 +108,34 @@ the heaviest page at this data volume, with an 818 ms maximum. The published
 service, gateway round trip, concurrent-user load, and truly cold browser-cache
 behavior remain separate acceptance tests.
 
+## Published-service QA on 2026-08-29
+
+The signed-in Power BI Service report was reviewed at its published URL. All
+three primary pages rendered, and the hidden Merchant Detail drill-through page
+was correctly omitted from the Pages pane.
+
+- The Merchant Risk start date was changed to `1/1/2020`; its controls updated
+  to 182 transactions, $13.52K total amount, and $74.30 average amount.
+- Switching to Risk & Exceptions preserved the `1/1/2020` date context and
+  returned 2.20% error rate and four error transactions.
+- **Clear all slicers** restored the complete `9/1/2002` through `2/28/2020`
+  range and the 19,963-transaction control total.
+- Observed warm page-transition wall times were 3.69 seconds for Executive
+  Overview, 3.73 seconds for Risk & Exceptions, and 5.72 seconds for Merchant
+  Risk. These figures include browser automation overhead and are directional,
+  not network-isolated performance timings.
+- The service banner still reported data updated on 2026-08-27. Scheduled
+  refreshes on 2026-08-28 and 2026-08-29 failed because the gateway host was
+  offline. The latest published report therefore predates the current local
+  PBIX and serving-contract fixes.
+
+The published Merchant Risk labels also demonstrated why numeric 64-bit source
+IDs are unsuitable for browser display: values were rounded. The serving layer
+now publishes exact `merchant_id_text` plus compact `merchant_display_label`
+fields, and the local semantic model has been hardened and refreshed. Visual
+field replacement is complete in the local PBIX; republication remains a
+release action.
+
 ## KPI reconciliation against serving data on 2026-08-29
 
 The current report cards were reconciled directly to
@@ -153,7 +188,9 @@ app validation remains a release acceptance check.
 | Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
 | Medium | Generated phone layouts have not been tested on target physical devices | Validate all four pages in the Power BI mobile app and refine spacing if needed |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
-| Low | Published-service rendering was unavailable during this audit | Repeat the four-page visual check in Power BI Service after the next successful refresh |
+| High | Published service is stale after two gateway-offline refresh failures | Keep the signed-in gateway workstation powered on and verify the next unattended 05:00/06:00 cycle |
+| Medium | Published visuals still reflect the prior numeric merchant IDs and round them | Publish the corrected local PBIX, then verify compact labels and exact-ID detail in the service |
+| Medium | Full Merchant Risk drill-through and tooltip behavior has not been tested in the service | Complete the interaction test after publishing the current PBIX |
 | Low | Local cold-start time was dominated by Performance Analyzer `Other` time | Repeat a cold-cache service test after the scheduled refresh and compare it with the warm Desktop baseline |
 
 ## Final report acceptance checklist
@@ -168,9 +205,10 @@ app validation remains a release acceptance check.
 - [x] Remove the hidden Merchant Detail state-concentration visual from tab
   order, or make the visual visible and position it deliberately.
 - [ ] Validate color contrast and non-color risk cues.
-- [ ] Test clear-all-slicers behavior on every primary page.
-- [ ] Test synchronized date slicers across all primary pages.
-- [ ] Test Merchant Risk to Merchant Detail drill-through and Back behavior.
+- [x] Test clear-all-slicers behavior in the published primary-page flow.
+- [x] Test synchronized date slicers across the published primary-page flow.
+- [x] Test Merchant Risk to Merchant Detail drill-through and Back behavior in
+  the corrected local PBIX; repeat it in the service after publication.
 - [ ] Test all tooltips and cross-filter interactions.
 - [x] Audit whether a phone layout currently exists.
 - [x] Build phone layouts for all four user-facing pages.
@@ -178,5 +216,6 @@ app validation remains a release acceptance check.
 - [x] Capture a four-page warm Desktop Performance Analyzer baseline.
 - [ ] Repeat performance testing in Power BI Service, including a cold-cache
   first load and a warm reload.
-- [ ] Repeat the audit in Power BI Service at the target display resolution.
+- [x] Repeat primary-page rendering and filter synchronization checks in Power
+  BI Service at the current desktop browser resolution.
 - [x] Reconcile report totals to the current pipeline controls.

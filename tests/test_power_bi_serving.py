@@ -206,9 +206,49 @@ def test_build_power_bi_frames_enforces_contracts() -> None:
         "calendar_year_month_sort"
     ].tolist() == [202401, 202402]
 
+    assert serving_frames["merchant"][
+        "merchant_id_text"
+    ].tolist() == ["100", "200"]
+
+    assert serving_frames["merchant"][
+        "merchant_display_label"
+    ].tolist() == ["MRC-000001", "MRC-000002"]
+
     assert serving_frames["transaction"][
         "has_error"
     ].tolist() == [False, True, False]
+
+
+def test_merchant_identifiers_are_power_bi_safe() -> None:
+    """Large source IDs must survive the BI boundary without rounding."""
+
+    source_frames = create_sample_gold_frames()
+    source_frames["merchant"]["merchant_id"] = pd.Series(
+        [
+            -8566951830324093739,
+            5763106017265140261,
+        ],
+        dtype="Int64",
+    )
+
+    serving_frames = build_power_bi_frames(
+        dim_merchant_df=source_frames["merchant"],
+        dim_date_df=source_frames["date"],
+        fact_transaction_df=(
+            source_frames["transaction"]
+        ),
+    )
+
+    assert serving_frames["merchant"][
+        "merchant_id_text"
+    ].tolist() == [
+        "-8566951830324093739",
+        "5763106017265140261",
+    ]
+
+    assert serving_frames["merchant"][
+        "merchant_display_label"
+    ].is_unique
 
 
 def test_build_power_bi_frames_rejects_missing_columns() -> None:

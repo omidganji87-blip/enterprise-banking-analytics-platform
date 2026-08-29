@@ -44,6 +44,18 @@ Parquet is the publication format, not the semantic model. Power BI still adds
 relationships, display formats, sort behavior, measures, interactions, and
 report design after importing the files.
 
+The merchant publication deliberately provides three forms of identity:
+
+- `merchant_id` is the signed 64-bit source value retained for lineage.
+- `merchant_id_text` is the exact source value represented as text for display,
+  drill-through, tooltips, and exports.
+- `merchant_display_label` is a compact deterministic label such as
+  `MRC-000001` for readable report axes.
+
+This prevents the rounding that can occur when a browser-based visual renders a
+64-bit integer through JavaScript. Hide the numeric source field in report view;
+do not delete it from the serving contract.
+
 ## 3. Canonical project files
 
 The pipeline writes the three report tables here:
@@ -299,7 +311,10 @@ RETURN
 
 ```dax
 Selected Merchant Profile =
-VAR MerchantID = SELECTEDVALUE ( dim_merchant_analytics[merchant_id] )
+VAR MerchantLabel =
+    SELECTEDVALUE ( dim_merchant_analytics[merchant_display_label] )
+VAR MerchantSourceID =
+    SELECTEDVALUE ( dim_merchant_analytics[merchant_id_text] )
 VAR MerchantCity = SELECTEDVALUE ( dim_merchant_analytics[merchant_city] )
 VAR MerchantState = SELECTEDVALUE ( dim_merchant_analytics[merchant_state] )
 VAR MerchantZip = SELECTEDVALUE ( dim_merchant_analytics[merchant_zip_code] )
@@ -307,9 +322,10 @@ VAR MerchantCategory =
     SELECTEDVALUE ( dim_merchant_analytics[merchant_category_code] )
 RETURN
     IF (
-        ISBLANK ( MerchantID ),
+        ISBLANK ( MerchantLabel ),
         "Drill through from Merchant Risk to select one merchant",
-        "Merchant " & FORMAT ( MerchantID, "0" )
+        MerchantLabel
+            & "  |  Source ID " & MerchantSourceID
             & "  |  " & COALESCE ( MerchantCity, "ONLINE" )
             & IF (
                 NOT ISBLANK ( MerchantState ),
@@ -452,8 +468,16 @@ Use this order whenever the source data changes:
 2. Confirm the pipeline ends with `PIPELINE COMPLETED SUCCESSFULLY`.
 3. Confirm the Power BI model and persisted validations are `True`.
 4. Open the PBIX report.
-5. Select **Home > Refresh**.
-6. Confirm all three Parquet queries refresh without errors.
+5. From a separate PowerShell 7 terminal, run:
+
+   ```powershell
+   pwsh -NoProfile -File ".\scripts\harden_power_bi_model.ps1" `
+       -RemoveAutoDateTables `
+       -RefreshModel
+   ```
+
+6. Confirm the command reports `NumericMerchantIdHidden : True`, no remaining
+   automatic date tables, and a non-null model refresh duration.
 7. Check the control totals on the Executive and Risk pages.
 8. Save the PBIX file.
 
@@ -496,7 +520,8 @@ start-when-available behavior.
 On this workstation, S4U registration was denied by Windows. The registered
 fallback is an interactive, credential-free task under `OMID\omidg`. The user
 must remain signed in to Windows. Locking or sleeping is acceptable; signing
-out or shutting down prevents the task from running.
+out or shutting down prevents the task from running. `WakeToRun` resumes a
+sleeping machine; it cannot boot a computer that was powered off.
 
 #### Run the guarded pipeline manually
 
@@ -616,6 +641,25 @@ table and a measure are different objects.
 
 Resolution: create a simple measures-home table once, keep its placeholder
 column hidden, and use **New measure** for each business calculation.
+
+### Refresh reports a cyclic reference
+
+Cause: Power BI's automatic date hierarchy created a hidden `LocalDateTable_*`,
+an automatic relationship, and a timestamp-column variation even though the
+model already has a marked `dim_date_analytics` table.
+
+Resolution: keep the PBIX open, ensure `dim_date_analytics` is marked as the
+date table, and run:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\harden_power_bi_model.ps1" `
+    -RemoveAutoDateTables `
+    -RefreshModel
+```
+
+The script removes the dependent variation and relationship before deleting the
+hidden tables, then refreshes the model. It is safe to run again because it is
+idempotent.
 
 ## 13. Change-management rule
 

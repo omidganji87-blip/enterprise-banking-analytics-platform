@@ -82,10 +82,19 @@ Important fields include:
 
 - `merchant_key`
 - `merchant_id`
+- `merchant_id_text`
+- `merchant_display_label`
 - `merchant_city`
 - `merchant_state`
 - `merchant_zip_code`
 - `merchant_category_code`
+
+`merchant_id` remains the signed 64-bit source identifier for lineage. The
+serving layer also publishes its exact text form because report visuals render
+through JavaScript and cannot safely display every 64-bit integer. Use the
+compact `merchant_display_label` (`MRC-######`) in axes and drill-through UI,
+and use `merchant_id_text` when the exact source identifier must be shown or
+exported.
 
 ### `dim_date`
 
@@ -434,7 +443,8 @@ pwsh -NoProfile -File ".\scripts\register_scheduled_pipeline_task.ps1"
 The current task uses interactive Windows credentials because unattended S4U
 registration was denied on this workstation. `OMID\omidg` must remain signed
 in; the workstation may be locked or sleeping because the task is configured to
-wake it. The gateway service and internet connection must be available for the
+wake it. It must remain powered on; wake-to-run cannot start a fully powered-off
+computer. The gateway service and internet connection must be available for the
 06:00 Power BI Service refresh. The two schedules are independent: a pipeline
 run does not directly trigger a Power BI refresh.
 
@@ -454,6 +464,21 @@ data/analytics/dim_date_analytics.parquet
 data/analytics/dim_merchant_analytics.parquet
 data/analytics/fact_transaction_analytics.parquet
 ```
+
+After a serving-contract or date-model change, keep the PBIX open and run the
+idempotent semantic-model hardening command from a separate PowerShell 7
+terminal:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\harden_power_bi_model.ps1" `
+    -RemoveAutoDateTables `
+    -RefreshModel
+```
+
+The command preserves the source merchant ID as exact text, exposes the compact
+merchant display label, hides the unsafe numeric display field, removes hidden
+automatic date tables that can create cyclic refresh dependencies, and performs
+a full local model refresh. Save the PBIX after it succeeds.
 
 For a detailed, repeatable training guide covering import queries, Power Query,
 relationships, sort columns, DAX, page design, refresh, validation, and
@@ -504,7 +529,7 @@ python -m pytest -q
 Current validated result:
 
 ```text
-54 passed
+55 passed
 ```
 
 Run an individual test module with:
@@ -700,8 +725,9 @@ Power BI KPI, keyboard-order, hidden-focus, and phone-layout remediation
 ✓
 ```
 
-The local platform controls are implemented and validated. Final production
-acceptance still requires a fully unattended 05:00 pipeline plus 06:00 Power BI
-Service refresh cycle, end-to-end alt-text/keyboard/device and interaction QA,
-and governed security and distribution controls before real banking data is
-introduced.
+The local platform controls are implemented and validated. Published-service
+rendering plus synchronized-date and clear-filter behavior were verified on
+2026-08-29. Final production acceptance still requires a successful fully
+unattended 05:00 pipeline plus 06:00 Power BI Service refresh cycle, final
+drill-through/tooltip/accessibility/device QA, and governed security and
+distribution controls before real banking data is introduced.

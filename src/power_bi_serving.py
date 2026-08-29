@@ -28,13 +28,19 @@ DIM_DATE_ANALYTICS_COLUMNS = [
     "is_weekend",
 ]
 
-DIM_MERCHANT_ANALYTICS_COLUMNS = [
+DIM_MERCHANT_SOURCE_COLUMNS = [
     "merchant_key",
     "merchant_id",
     "merchant_city",
     "merchant_state",
     "merchant_zip_code",
     "merchant_category_code",
+]
+
+DIM_MERCHANT_ANALYTICS_COLUMNS = [
+    *DIM_MERCHANT_SOURCE_COLUMNS,
+    "merchant_id_text",
+    "merchant_display_label",
 ]
 
 POWER_BI_OUTPUT_FILENAMES = {
@@ -104,7 +110,7 @@ def build_power_bi_frames(
     _require_columns(
         dataframe=dim_merchant_df,
         required_columns=(
-            DIM_MERCHANT_ANALYTICS_COLUMNS
+            DIM_MERCHANT_SOURCE_COLUMNS
         ),
         table_name="dim_merchant",
     )
@@ -125,9 +131,29 @@ def build_power_bi_frames(
 
     dim_merchant_analytics_df = (
         dim_merchant_df[
-            DIM_MERCHANT_ANALYTICS_COLUMNS
+            DIM_MERCHANT_SOURCE_COLUMNS
         ]
         .copy()
+    )
+
+    # Power BI visuals are rendered through JavaScript, whose numeric
+    # precision cannot safely represent the source system's signed 64-bit
+    # merchant identifiers. Preserve the numeric source field for lineage,
+    # and publish an exact text representation for labels, drill-through,
+    # exports, and tooltips.
+    dim_merchant_analytics_df["merchant_id_text"] = (
+        dim_merchant_analytics_df["merchant_id"]
+        .astype("string")
+    )
+
+    # Long hashed identifiers are exact but difficult to scan. This compact,
+    # deterministic label is the preferred report-facing merchant identity.
+    dim_merchant_analytics_df["merchant_display_label"] = (
+        "MRC-"
+        + dim_merchant_analytics_df["merchant_key"]
+        .astype("int64")
+        .astype("string")
+        .str.zfill(6)
     )
 
     dim_date_analytics_df = (
@@ -274,6 +300,23 @@ def validate_power_bi_model(
             .duplicated()
             .sum()
         ),
+        "missing_merchant_id_text": int(
+            merchant_df["merchant_id_text"]
+            .isna()
+            .sum()
+        ),
+        "duplicate_merchant_display_labels": int(
+            merchant_df["merchant_display_label"]
+            .duplicated()
+            .sum()
+        ),
+        "merchant_id_text_mismatches": int(
+            (
+                merchant_df["merchant_id_text"]
+                != source_merchant_df["merchant_id"]
+                .astype("string")
+            ).sum()
+        ),
         "missing_transaction_keys": int(
             transaction_df["transaction_key"]
             .isna()
@@ -333,6 +376,15 @@ def validate_power_bi_model(
             ] == 0,
             validation_result[
                 "duplicate_merchant_keys"
+            ] == 0,
+            validation_result[
+                "missing_merchant_id_text"
+            ] == 0,
+            validation_result[
+                "duplicate_merchant_display_labels"
+            ] == 0,
+            validation_result[
+                "merchant_id_text_mismatches"
             ] == 0,
             validation_result[
                 "missing_transaction_keys"
