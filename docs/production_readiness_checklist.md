@@ -10,6 +10,7 @@ changes the pipeline, semantic model, report, gateway, or schedule.
 |---|---|---|---|
 | Data contracts and transformations | Complete | Bronze, Silver, Gold, Analytics, and Power BI layers execute successfully; persisted model validation is true | Re-run after any schema change |
 | Automated Python quality | Complete | 54 tests pass locally; dependency check and module compilation pass; GitHub Actions [run #7](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/runs/33235383573) succeeded on 2026-08-29 | Keep CI green on every change |
+| Local Streamlit dashboard | Complete for local use | Headless smoke test returned HTTP 200 from both the app and `/_stcore/health` on 2026-08-29 | Repeat after dashboard or dependency changes; cloud deployment requires portable storage paths |
 | Power BI serving contract | Complete | Three canonical Parquet files exist under `data/analytics`; row counts, keys, fraud, errors, and amount reconcile | Revalidate after Gold or DAX contract changes |
 | Guarded local production run | Complete | Verified pre-run backup, full test run, six pipeline stages, publication hashes, atomic status, and 14-day retention | Monitor each scheduled run |
 | Failure recovery | Complete | Controlled failure returned exit code 1 and restored all three publications with unchanged SHA-256 hashes | Repeat after changing recovery logic |
