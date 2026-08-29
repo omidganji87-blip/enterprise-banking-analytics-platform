@@ -124,56 +124,48 @@ and 6.13% amount growth.
 | Prior Year Transaction Amount | $1,529,197.77 |
 | Amount YoY Growth | 6.13353759% |
 
-## Keyboard tab-order audit on 2026-08-29
+## Keyboard tab-order remediation on 2026-08-29
 
-The Power BI Selection pane exposed the current keyboard sequence without
-changing the report. The primary pages currently place the date slicer after
-the charts, so the sequence does not yet follow the visual information
-hierarchy.
+The Power BI Selection pane was used to align keyboard navigation with the
+report's visual information hierarchy. Duplicate or hidden objects were removed
+from keyboard focus.
 
-| Page | Current sequence |
+| Page | Final sequence |
 |---|---|
-| Executive Overview | Clear-all button; page navigator; legacy card group; Transaction Method Mix; Transaction Volume & Value Trend; date slicer; header text; new card group |
-| Risk & Exceptions | Clear-all button; page navigator; Error Type Breakdown; Fraud & Error Event Trend; date slicer; header text; new card group |
-| Merchant Risk | Clear-all button; page navigator; Top 10 Fraudulent Merchants; Fraud by Merchant Category; date slicer; header text; new card group |
-| Merchant Detail | Back button; profile card; Transaction Evidence Ledger; Fraud Concentration by Merchant State; date slicer; header text; KPI card group |
+| Executive Overview | Page navigator; clear-all button; date slicer; KPI card group; Transaction Method Mix; Transaction Volume & Value Trend; header text; legacy duplicate card group excluded from focus |
+| Risk & Exceptions | Page navigator; clear-all button; date slicer; KPI card group; Error Type Breakdown; Fraud & Error Event Trend; header text |
+| Merchant Risk | Page navigator; clear-all button; date slicer; KPI card group; Top 10 Fraudulent Merchants; Fraud by Merchant Category; header text |
+| Merchant Detail | Back button; date slicer; selected-merchant profile; KPI card group; Transaction Evidence Ledger; header text; hidden Fraud Concentration by Merchant State visual excluded from focus |
 
-Professional target order for each primary page is page navigation, clear-all
-control, date slicer, KPI cards, then analytical charts in normal reading order.
-Merchant Detail should use Back, date slicer, selected-merchant profile, KPI
-cards, then the evidence ledger. Decorative or unused visuals should be removed
-from keyboard focus. The Layer order pane confirmed that Merchant Detail's
-`Fraud Concentration by Merchant State` visual is hidden, while the Tab order
-pane confirmed that it remains keyboard-focusable.
+## Mobile layout remediation on 2026-08-29
 
-## Mobile layout audit on 2026-08-29
-
-Power BI opened the Executive Overview phone editor with the empty `Create
-mobile layout` canvas and offered the page visuals for placement. Therefore a
-usable phone layout has not yet been authored. The audit exited mobile mode and
-returned the report to the unchanged Executive Overview desktop canvas.
+Power BI's phone-layout generator was run for all four report pages. Each phone
+canvas now follows the page navigation, clear control, date slicer, KPI cards,
+and analytical-detail hierarchy. Merchant Detail keeps the hidden state-
+concentration chart out of the placed phone content. The generated layouts were
+visually inspected in Power BI Desktop; final device-size and Power BI mobile-
+app validation remains a release acceptance check.
 
 ## Open findings
 
 | Priority | Finding | Required action |
 |---|---|---|
-| Medium | Fraud Exposure displayed with an ellipsis at the inspected Desktop canvas size | Increase value area, reduce display text size, or use compact display units; verify again at the target service resolution |
-| Medium | The current keyboard order places charts before the date slicer and KPI group on all primary pages | Reorder each page to follow navigation, filters, KPIs, charts, and supporting detail; then test with keyboard-only navigation |
-| Medium | Hidden Merchant Detail state-concentration visual remains in keyboard tab order | Remove it from tab order, or make it visible and place it deliberately in the page's reading sequence |
 | Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
-| Medium | Executive Overview has no authored mobile layout | Build and test a deliberate phone layout for each user-facing page, or explicitly document desktop-only scope |
+| Medium | Generated phone layouts have not been tested on target physical devices | Validate all four pages in the Power BI mobile app and refine spacing if needed |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
 | Low | Published-service rendering was unavailable during this audit | Repeat the four-page visual check in Power BI Service after the next successful refresh |
 | Low | Local cold-start time was dominated by Performance Analyzer `Other` time | Repeat a cold-cache service test after the scheduled refresh and compare it with the warm Desktop baseline |
 
 ## Final report acceptance checklist
 
-- [ ] Resolve Fraud Exposure truncation.
+- [x] Resolve Fraud Exposure truncation (`$2.62K`, thousands, two decimals).
 - [ ] Verify every visual title and custom alt-text description.
 - [x] Audit the current keyboard tab order on all four pages.
-- [ ] Reorder keyboard focus to navigation, slicers, KPIs, charts, then
-  supporting detail; verify the final sequence with keyboard-only navigation.
-- [ ] Remove the hidden Merchant Detail state-concentration visual from tab
+- [x] Reorder keyboard focus to navigation, slicers, KPIs, charts, then
+  supporting detail.
+- [ ] Confirm the final focus sequence in an end-to-end keyboard and screen-
+  reader session.
+- [x] Remove the hidden Merchant Detail state-concentration visual from tab
   order, or make the visual visible and position it deliberately.
 - [ ] Validate color contrast and non-color risk cues.
 - [ ] Test clear-all-slicers behavior on every primary page.
@@ -181,8 +173,8 @@ returned the report to the unchanged Executive Overview desktop canvas.
 - [ ] Test Merchant Risk to Merchant Detail drill-through and Back behavior.
 - [ ] Test all tooltips and cross-filter interactions.
 - [x] Audit whether a phone layout currently exists.
-- [ ] Build and validate phone layouts for user-facing pages, or document mobile
-  as an intentional exclusion.
+- [x] Build phone layouts for all four user-facing pages.
+- [ ] Validate the generated phone layouts on target physical devices.
 - [x] Capture a four-page warm Desktop Performance Analyzer baseline.
 - [ ] Repeat performance testing in Power BI Service, including a cold-cache
   first load and a warm reload.

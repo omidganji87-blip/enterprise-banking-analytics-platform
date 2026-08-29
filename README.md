@@ -695,9 +695,13 @@ Cross-platform GitHub CI for Python and operational PowerShell
 
 Four-page Power BI Desktop performance baseline
 ✓
+
+Power BI KPI, keyboard-order, hidden-focus, and phone-layout remediation
+✓
 ```
 
 The local platform controls are implemented and validated. Final production
 acceptance still requires a fully unattended 05:00 pipeline plus 06:00 Power BI
-Service refresh cycle, report accessibility/mobile remediation, and governed
-security and distribution controls before real banking data is introduced.
+Service refresh cycle, end-to-end alt-text/keyboard/device and interaction QA,
+and governed security and distribution controls before real banking data is
+introduced.
