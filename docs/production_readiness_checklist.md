@@ -19,10 +19,10 @@ changes the pipeline, semantic model, report, gateway, or schedule.
 | Power BI Service schedule | Configured; live acceptance pending | Daily 06:00 America/Toronto refresh is configured | Verify refresh history after the first complete unattended 05:00/06:00 cycle |
 | Report control totals | Complete for current sample | 19,963 transactions, 1,622,991.69 amount, 27 fraud transactions, and 574 error transactions | Reconcile after each changed publication |
 | Report performance | Desktop baseline complete; service acceptance pending | All four pages were measured with Performance Analyzer; warm visual maximum was 818 ms | Repeat cold- and warm-cache tests in Power BI Service |
-| Report design and accessibility | Structurally audited; final live audit pending | Four-page Executive, Risk, Merchant, and drill-through flow was inspected in Power BI Desktop | Resolve Fraud Exposure truncation; audit keyboard order, alt text, contrast, mobile layout, interactions, tooltips, and service rendering |
+| Report design and accessibility | Structurally audited; remediation and final live audit pending | Four-page flow, warm performance, keyboard order, hidden-visual state, and mobile-layout presence were inspected in Power BI Desktop | Resolve Fraud Exposure truncation; fix keyboard order and hidden focus; verify alt text and contrast; build mobile layout; test interactions, tooltips, and service rendering |
 | Security and governed distribution | Planned | Workspace publication exists | Define audiences, row-level security, sensitivity label, app distribution, and least-privilege ownership before real banking data |
 | Version control and CI | Complete for current code and documentation | Production automation, operational controls, semantic inventory, and report QA commits are on `main`; GitHub Actions [run #7](https://github.com/omidganji87-blip/enterprise-banking-analytics-platform/actions/runs/33235383573) succeeded | Deliberately review the locally modified PBIX before its next commit |
-| Final delivery audit | Pending | Local technical gates are documented | Complete live service history, report UX/accessibility, security, and clean repository review |
+| Final delivery audit | Pending | Local technical gates and repository hygiene are documented; runtime files are ignored and no tracked secret patterns were found | Complete live service history, report UX/accessibility remediation, security/governance, and deliberate PBIX review |
 
 ## Reproducible validation commands
 
