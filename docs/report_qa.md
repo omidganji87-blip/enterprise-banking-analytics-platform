@@ -146,6 +146,13 @@ from keyboard focus; the Merchant Detail state-concentration visual should be
 verified because it appeared in tab order but was not visible on the inspected
 canvas.
 
+## Mobile layout audit on 2026-08-29
+
+Power BI opened the Executive Overview phone editor with the empty `Create
+mobile layout` canvas and offered the page visuals for placement. Therefore a
+usable phone layout has not yet been authored. The audit exited mobile mode and
+returned the report to the unchanged Executive Overview desktop canvas.
+
 ## Open findings
 
 | Priority | Finding | Required action |
@@ -153,7 +160,7 @@ canvas.
 | Medium | Fraud Exposure displayed with an ellipsis at the inspected Desktop canvas size | Increase value area, reduce display text size, or use compact display units; verify again at the target service resolution |
 | Medium | The current keyboard order places charts before the date slicer and KPI group on all primary pages | Reorder each page to follow navigation, filters, KPIs, charts, and supporting detail; then test with keyboard-only navigation |
 | Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
-| Medium | Mobile layout was not visually validated | Complete and test the phone layout or explicitly document desktop-only scope |
+| Medium | Executive Overview has no authored mobile layout | Build and test a deliberate phone layout for each user-facing page, or explicitly document desktop-only scope |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
 | Low | Published-service rendering was unavailable during this audit | Repeat the four-page visual check in Power BI Service after the next successful refresh |
 | Low | Local cold-start time was dominated by Performance Analyzer `Other` time | Repeat a cold-cache service test after the scheduled refresh and compare it with the warm Desktop baseline |
@@ -170,7 +177,9 @@ canvas.
 - [ ] Test synchronized date slicers across all primary pages.
 - [ ] Test Merchant Risk to Merchant Detail drill-through and Back behavior.
 - [ ] Test all tooltips and cross-filter interactions.
-- [ ] Validate phone layout or document its exclusion.
+- [x] Audit whether a phone layout currently exists.
+- [ ] Build and validate phone layouts for user-facing pages, or document mobile
+  as an intentional exclusion.
 - [x] Capture a four-page warm Desktop Performance Analyzer baseline.
 - [ ] Repeat performance testing in Power BI Service, including a cold-cache
   first load and a warm reload.
