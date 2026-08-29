@@ -681,6 +681,23 @@ Interactive Streamlit dashboard
 End-to-end orchestration
 ✓
 
+Guarded scheduled production execution and verified recovery
+✓
+
+Operational health and configuration-drift monitoring
+✓
+
 Automated test coverage
 ✓
+
+Cross-platform GitHub CI for Python and operational PowerShell
+✓
+
+Four-page Power BI Desktop performance baseline
+✓
 ```
+
+The local platform controls are implemented and validated. Final production
+acceptance still requires a fully unattended 05:00 pipeline plus 06:00 Power BI
+Service refresh cycle, report accessibility/mobile remediation, and governed
+security and distribution controls before real banking data is introduced.
