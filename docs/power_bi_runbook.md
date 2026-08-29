@@ -295,6 +295,82 @@ RETURN
         & FORMAT ( MaxDate, "MMM d, yyyy" )
 ```
 
+### Guided interaction and conditional-format measures
+
+```dax
+Selected Merchant Profile =
+VAR MerchantID = SELECTEDVALUE ( dim_merchant_analytics[merchant_id] )
+VAR MerchantCity = SELECTEDVALUE ( dim_merchant_analytics[merchant_city] )
+VAR MerchantState = SELECTEDVALUE ( dim_merchant_analytics[merchant_state] )
+VAR MerchantZip = SELECTEDVALUE ( dim_merchant_analytics[merchant_zip_code] )
+VAR MerchantCategory =
+    SELECTEDVALUE ( dim_merchant_analytics[merchant_category_code] )
+RETURN
+    IF (
+        ISBLANK ( MerchantID ),
+        "Drill through from Merchant Risk to select one merchant",
+        "Merchant " & FORMAT ( MerchantID, "0" )
+            & "  |  " & COALESCE ( MerchantCity, "ONLINE" )
+            & IF (
+                NOT ISBLANK ( MerchantState ),
+                ", " & MerchantState,
+                ""
+            )
+            & IF (
+                NOT ISBLANK ( MerchantZip ),
+                " " & MerchantZip,
+                ""
+            )
+            & "  |  Category " & MerchantCategory
+    )
+```
+
+This measure gives the Merchant Detail page a useful empty-state instruction
+and a compact identity banner after drill-through.
+
+```dax
+Fraud Cell Color =
+IF (
+    SELECTEDVALUE ( fact_transaction_analytics[is_fraud] ) = TRUE (),
+    "#FDECEC",
+    "#FFFFFF"
+)
+```
+
+```dax
+Error Cell Color =
+IF (
+    SELECTEDVALUE ( fact_transaction_analytics[has_error] ) = TRUE (),
+    "#FFF4E5",
+    "#FFFFFF"
+)
+```
+
+Apply the color measures through **Cell elements > Background color > Field
+value** on the Transaction Evidence Ledger. They add a nonintrusive row cue;
+keep explicit fraud and error columns visible so color is never the only signal.
+
+The current `_Measures` table contains these 16 business measures:
+
+```text
+Amount YoY Growth
+Average Fraud Transaction Amount
+Average Transaction Amount
+Error Cell Color
+Error Rate
+Error Transaction Count
+Error-Free Rate
+Fraud Cell Color
+Fraud Exposure
+Fraud Rate
+Fraud Transaction Count
+Prior Year Transaction Amount
+Selected Date Range
+Selected Merchant Profile
+Total Transaction Amount
+Transaction Count
+```
+
 Format counts as whole numbers, monetary measures as currency, and rates or
 growth measures as percentages. A measure's name, formula, format, home table,
 and description together form its semantic contract.
@@ -455,7 +531,9 @@ The report is `HEALTHY` only when all of these are true:
 - The latest pipeline status is `SUCCESS`, no more than 26 hours old, and is
   newer than the most recently required 05:00 run window.
 - The Windows task exists, is ready or running, its last result is `0`, and its
-  last run is newer than the required run window.
+  last run is newer than the required run window. Its PowerShell action,
+  wrapper path, Python argument, 05:00 daily trigger, interactive identity, and
+  reliability settings must also match the registered production contract.
 - The Power BI gateway Windows service is running.
 - All three serving Parquet files exist.
 

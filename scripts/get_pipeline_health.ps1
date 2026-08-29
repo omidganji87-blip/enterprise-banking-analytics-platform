@@ -40,6 +40,18 @@ $AnalyticsPath = Join-Path `
     $ProjectRoot `
     "data\analytics"
 
+$ExpectedPipelineScriptPath = (
+    Resolve-Path (
+        Join-Path `
+            $PSScriptRoot `
+            "run_scheduled_pipeline.ps1"
+    )
+).Path
+
+$ExpectedPowerShellExecutable = Join-Path `
+    $env:ProgramFiles `
+    "PowerShell\7\pwsh.exe"
+
 $ServingFileNames = @(
     "dim_date_analytics.parquet"
     "dim_merchant_analytics.parquet"
@@ -133,6 +145,86 @@ if ($null -ne $ScheduledTask) {
         -TaskName $TaskName
 }
 
+$ScheduledAction = if ($null -ne $ScheduledTask) {
+    $ScheduledTask.Actions |
+        Select-Object -First 1
+}
+else {
+    $null
+}
+
+$ScheduledTrigger = if ($null -ne $ScheduledTask) {
+    $ScheduledTask.Triggers |
+        Select-Object -First 1
+}
+else {
+    $null
+}
+
+$TaskActionValid = (
+    $null -ne $ScheduledAction -and
+    $ScheduledAction.Execute -eq
+        $ExpectedPowerShellExecutable -and
+    $ScheduledAction.WorkingDirectory -eq
+        $ProjectRoot -and
+    $ScheduledAction.Arguments -match
+        [regex]::Escape($ExpectedPipelineScriptPath) -and
+    $ScheduledAction.Arguments -match
+        '-PythonExecutablePath\s+"[^\"]+python\.exe"'
+)
+
+$TaskTriggerValid = $false
+
+if ($null -ne $ScheduledTrigger) {
+    $TriggerStart = [DateTimeOffset]::Parse(
+        $ScheduledTrigger.StartBoundary
+    ).LocalDateTime
+
+    $TaskTriggerValid = (
+        $ScheduledTrigger.Enabled -and
+        $ScheduledTrigger.DaysInterval -eq 1 -and
+        $TriggerStart.Hour -eq $ScheduleHourLocal -and
+        $TriggerStart.Minute -eq 0
+    )
+}
+
+$ExpectedUserIds = @(
+    $env:USERNAME
+    (
+        $env:USERDOMAIN +
+        "\" +
+        $env:USERNAME
+    )
+)
+
+$TaskIdentityValid = (
+    $null -ne $ScheduledTask -and
+    $ScheduledTask.Principal.UserId -in
+        $ExpectedUserIds -and
+    $ScheduledTask.Principal.LogonType -eq
+        "Interactive"
+)
+
+$TaskReliabilityValid = (
+    $null -ne $ScheduledTask -and
+    $ScheduledTask.Settings.StartWhenAvailable -and
+    $ScheduledTask.Settings.WakeToRun -and
+    $ScheduledTask.Settings.MultipleInstances -eq
+        "IgnoreNew" -and
+    $ScheduledTask.Settings.ExecutionTimeLimit -eq
+        "PT1H" -and
+    $ScheduledTask.Settings.RestartCount -eq 2 -and
+    $ScheduledTask.Settings.RestartInterval -eq
+        "PT15M"
+)
+
+$TaskConfigurationValid = (
+    $TaskActionValid -and
+    $TaskTriggerValid -and
+    $TaskIdentityValid -and
+    $TaskReliabilityValid
+)
+
 $GatewayService = Get-Service `
     -Name "PBIEgwService" `
     -ErrorAction SilentlyContinue
@@ -184,6 +276,7 @@ $TaskHealthy = (
     $null -ne $ScheduledTaskInfo -and
     $ScheduledTaskInfo.LastTaskResult -eq 0 -and
     $ScheduledTaskInfo.LastRunTime -ge $RequiredRunAfter -and
+    $TaskConfigurationValid -and
     $ScheduledTask.State -in @(
         "Ready",
         "Running"
@@ -258,6 +351,11 @@ $HealthReport = [pscustomobject]@{
     else {
         $null
     }
+    TaskConfigurationValid = $TaskConfigurationValid
+    TaskActionValid = $TaskActionValid
+    TaskTriggerValid = $TaskTriggerValid
+    TaskIdentityValid = $TaskIdentityValid
+    TaskReliabilityValid = $TaskReliabilityValid
     GatewayService = if ($null -ne $GatewayService) {
         $GatewayService.Name
     }
@@ -297,6 +395,11 @@ else {
             TaskLastRunTime,
             TaskNextRunTime,
             TaskLastResult,
+            TaskConfigurationValid,
+            TaskActionValid,
+            TaskTriggerValid,
+            TaskIdentityValid,
+            TaskReliabilityValid,
             GatewayStatus,
             AllServingFilesExist,
             PipelineLogPath

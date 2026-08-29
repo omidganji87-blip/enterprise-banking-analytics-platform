@@ -56,7 +56,7 @@ Invalid merchant keys:            0
 After 06:00 America/Toronto:
 
 1. Run `scripts/get_pipeline_health.ps1`.
-2. Confirm `OverallHealth` is `HEALTHY`.
+2. Confirm `OverallHealth` and `TaskConfigurationValid` are healthy/true.
 3. Confirm the run ID belongs to the current 05:00 window.
 4. Confirm Task Scheduler last result is `0`.
 5. Open Power BI Service semantic-model refresh history.
