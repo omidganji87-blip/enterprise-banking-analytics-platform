@@ -384,6 +384,94 @@ Use this order whenever the source data changes:
 Power BI refresh reads the already-published serving files. It does not replace
 the data pipeline.
 
+### Automated daily refresh sequence
+
+The production sequence separates data publication from report import:
+
+```text
+05:00 America/Toronto
+Windows Task Scheduler -> scripts/run_scheduled_pipeline.ps1
+                       -> tests + six pipeline stages
+                       -> validated Parquet publication
+
+06:00 America/Toronto
+Power BI Service       -> on-premises data gateway
+                       -> three Parquet files in data/analytics
+                       -> semantic-model refresh
+```
+
+The one-hour gap gives the guarded pipeline time to finish before Power BI reads
+the files. The jobs are independent; successful execution of the local task
+does not directly call the Power BI REST API or trigger the service refresh.
+
+#### Register or repair the 05:00 Windows task
+
+Open a PowerShell 7 terminal at the project root and run:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\register_scheduled_pipeline_task.ps1"
+```
+
+The registration script uses the installed PowerShell 7 executable and records
+the exact Python executable in the task action. It configures one-hour maximum
+runtime, overlap prevention, two 15-minute retries, wake-to-run, and
+start-when-available behavior.
+
+On this workstation, S4U registration was denied by Windows. The registered
+fallback is an interactive, credential-free task under `OMID\omidg`. The user
+must remain signed in to Windows. Locking or sleeping is acceptable; signing
+out or shutting down prevents the task from running.
+
+#### Run the guarded pipeline manually
+
+```powershell
+pwsh -NoProfile -File ".\scripts\run_scheduled_pipeline.ps1"
+```
+
+The wrapper performs these controls in order:
+
+1. Validate PowerShell, Python, project paths, and the current serving files.
+2. Create a timestamped recovery folder and verify each copied file by SHA-256.
+3. Run the complete pytest suite.
+4. Run all six pipeline stages.
+5. Verify that every published Parquet file exists, is non-empty, and has a
+   readable SHA-256 hash.
+6. Write the latest status atomically to
+   `monitoring/scheduled_pipeline_status.json`.
+7. Keep 14 days of timestamped logs and recovery copies.
+
+If production execution fails, the wrapper restores and re-hashes the previous
+validated publication. Exit code `0` means success, `1` means failure with
+successful recovery, and `2` means both execution and recovery failed.
+
+#### Check operational health
+
+```powershell
+pwsh -NoProfile -File ".\scripts\get_pipeline_health.ps1"
+```
+
+The report is `HEALTHY` only when all of these are true:
+
+- The latest pipeline status is `SUCCESS`, no more than 26 hours old, and is
+  newer than the most recently required 05:00 run window.
+- The Windows task exists, is ready or running, its last result is `0`, and its
+  last run is newer than the required run window.
+- The Power BI gateway Windows service is running.
+- All three serving Parquet files exist.
+
+For machine-readable output, add `-AsJson`. Investigate a nonzero health-check
+exit code before relying on the next Power BI refresh.
+
+#### Verify the next unattended cycle
+
+After 06:00, verify both sides of the chain:
+
+1. Run `scripts/get_pipeline_health.ps1` and confirm a 05:00 pipeline run ID,
+   task result `0`, and `HEALTHY`.
+2. In Power BI Service, open the semantic model refresh history.
+3. Confirm the latest scheduled refresh started after 06:00 and succeeded.
+4. Open the report and reconcile the Executive and Risk control totals.
+
 ## 11. Validation checklist
 
 For the current sample data, these controls should reconcile:

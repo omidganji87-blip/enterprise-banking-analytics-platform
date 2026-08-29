@@ -238,10 +238,17 @@ Enterprise-Banking-Analytics-Platform/
 │   └── 06_power_bi_serving_layer.ipynb
 │
 ├── docs/
-│   └── power_bi_runbook.md
+│   ├── power_bi_runbook.md
+│   ├── production_readiness_checklist.md
+│   └── report_qa.md
 │
 ├── pipelines/
 │   └── run_pipeline.py
+│
+├── scripts/
+│   ├── get_pipeline_health.ps1
+│   ├── register_scheduled_pipeline_task.ps1
+│   └── run_scheduled_pipeline.ps1
 │
 ├── src/
 │   ├── __init__.py
@@ -371,6 +378,66 @@ Bronze status: SKIPPED
 
 This is expected idempotent behavior. The persisted Bronze output continues through Silver, Gold, Analytics, and Power BI publication.
 
+## Run the guarded production workflow
+
+The production wrapper tests the code, creates and verifies recovery copies of
+the current Power BI files, runs all six pipeline stages, validates the new
+publication, records machine-readable status, and removes runtime artifacts
+older than 14 days.
+
+From the project root, run:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\run_scheduled_pipeline.ps1"
+```
+
+The wrapper uses these exit codes:
+
+```text
+0  Pipeline and publication completed successfully
+1  Pipeline failed; previous validated publication was restored
+2  Pipeline failed and recovery also failed
+```
+
+Operational outputs are intentionally excluded from Git:
+
+```text
+logs/scheduled_pipeline/
+monitoring/scheduled_pipeline_status.json
+data/backups/power_bi_serving/
+```
+
+Check the complete local refresh chain with:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\get_pipeline_health.ps1"
+```
+
+The command verifies the latest pipeline status, Windows scheduled task,
+on-premises data gateway service, and all three serving files.
+
+### Automated local-to-Power-BI refresh sequence
+
+The configured operating sequence is:
+
+```text
+05:00 America/Toronto  Windows Task Scheduler runs the guarded pipeline
+06:00 America/Toronto  Power BI Service imports the three published Parquet files
+```
+
+Register or repair the Windows task from a PowerShell 7 terminal with:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\register_scheduled_pipeline_task.ps1"
+```
+
+The current task uses interactive Windows credentials because unattended S4U
+registration was denied on this workstation. `OMID\omidg` must remain signed
+in; the workstation may be locked or sleeping because the task is configured to
+wake it. The gateway service and internet connection must be available for the
+06:00 Power BI Service refresh. The two schedules are independent: a pipeline
+run does not directly trigger a Power BI refresh.
+
 ## Open and refresh the Power BI report
 
 Run the complete pipeline before refreshing Power BI. Then open:
@@ -391,6 +458,12 @@ data/analytics/fact_transaction_analytics.parquet
 For a detailed, repeatable training guide covering import queries, Power Query,
 relationships, sort columns, DAX, page design, refresh, validation, and
 troubleshooting, see [Power BI Serving Layer and Dashboard Runbook](docs/power_bi_runbook.md).
+
+For release gates, unattended-cycle acceptance, and enterprise hardening, see
+[Production Readiness Checklist](docs/production_readiness_checklist.md).
+
+For the current page inventory and remaining UX/accessibility checks, see
+[Power BI Report QA](docs/report_qa.md).
 
 ## Run the dashboard
 
@@ -547,14 +620,17 @@ Quarantine rows
 - Rebuild the analytics serving layer after changing Gold outputs.
 - Update and test the Power BI serving contract before refreshing the PBIX after a Gold schema change.
 - Keep Power BI query sources inside `data/analytics`; do not use temporary drive-root files.
+- Keep the workstation signed in for the current interactive 05:00 scheduled task.
+- Treat the 05:00 pipeline and 06:00 Power BI refresh as separate monitored jobs.
+- Run `scripts/get_pipeline_health.ps1` after infrastructure or credential changes.
 - The local dashboard should not be deployed until cloud-compatible data storage and paths are configured.
 
 ## Future enhancements
 
 Potential next phases include:
 
-- Centralized pipeline execution logging
-- Stage-duration and failure monitoring
+- Centralized multi-host log aggregation
+- Per-stage duration telemetry and alert delivery
 - Command-line configuration
 - Incremental Silver and Gold processing
 - Slowly changing dimensions
