@@ -112,9 +112,10 @@ behavior remain separate acceptance tests.
 
 ## Published-service QA on 2026-08-29
 
-The signed-in Power BI Service report was reviewed at its published URL. All
-three primary pages rendered, and the hidden Merchant Detail drill-through page
-was correctly omitted from the Pages pane.
+The corrected PBIX was published to My workspace and replaced the existing
+semantic model successfully. The signed-in Power BI Service report was then
+reviewed at its published URL. All three primary pages rendered, and the hidden
+Merchant Detail drill-through page was correctly omitted from the Pages pane.
 
 - The Merchant Risk start date was changed to `1/1/2020`; its controls updated
   to 182 transactions, $13.52K total amount, and $74.30 average amount.
@@ -126,17 +127,23 @@ was correctly omitted from the Pages pane.
   Overview, 3.73 seconds for Risk & Exceptions, and 5.72 seconds for Merchant
   Risk. These figures include browser automation overhead and are directional,
   not network-isolated performance timings.
-- The service banner still reported data updated on 2026-08-27. Scheduled
-  refreshes on 2026-08-28 and 2026-08-29 failed because the gateway host was
-  offline. The latest published report therefore predates the current local
-  PBIX and serving-contract fixes.
+- After replacement, the service banner reported data updated on 2026-08-29
+  and the current control totals rendered as 20K transactions, $1.62M total
+  amount, $81.30 average amount, 0.14% fraud rate, 27 fraud transactions, 574
+  error transactions, and $2.62K fraud exposure.
+- Merchant Risk rendered compact labels such as `MRC-000028` rather than
+  rounded numeric source IDs.
+- Selecting the `MRC-000028` bar cross-filtered the cards to three
+  transactions, $162.11 total amount, $54.04 average amount, 100% fraud rate,
+  and three fraud transactions; clearing the selection restored the controls.
+- The service drill-through opened the hidden Merchant Detail page with
+  `MRC-000028`, exact source ID `8566951830324093739`, three matching evidence
+  rows, and $162.11 total amount. The Back control returned to Merchant Risk.
 
-The published Merchant Risk labels also demonstrated why numeric 64-bit source
-IDs are unsuitable for browser display: values were rounded. The serving layer
-now publishes exact `merchant_id_text` plus compact `merchant_display_label`
-fields, and the local semantic model has been hardened and refreshed. Visual
-field replacement is complete in the local PBIX; republication remains a
-release action.
+These checks confirm that the exact-safe merchant serving contract, hidden-page
+navigation, representative cross-filter path, and end-to-end drill-through are
+active in the published release. The next fully unattended 05:00 local run plus
+06:00 service refresh remains a separate operational acceptance gate.
 
 ## KPI reconciliation against serving data on 2026-08-29
 
@@ -239,9 +246,9 @@ app validation remains a release acceptance check.
 | Medium | Custom alt text and standard-theme contrast are implemented locally, but end-to-end assistive-technology acceptance is pending | Publish the corrected PBIX and test all four pages with the target screen reader, browser, and Windows high-contrast combination |
 | Medium | Generated phone layouts have not been tested on target physical devices | Validate all four pages in the Power BI mobile app and refine spacing if needed |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
-| High | Published service is stale after two gateway-offline refresh failures | Keep the signed-in gateway workstation powered on and verify the next unattended 05:00/06:00 cycle |
-| Medium | Published visuals still reflect the prior numeric merchant IDs and round them | Publish the corrected local PBIX, then verify compact labels and exact-ID detail in the service |
-| Medium | Full Merchant Risk drill-through and tooltip behavior has not been tested in the service | Complete the interaction test after publishing the current PBIX |
+| High | The corrected report is published, but the end-to-end unattended local-pipeline and service-refresh chain has not yet passed after two gateway-offline failures | Keep the signed-in gateway workstation powered on and verify the next unattended 05:00/06:00 cycle |
+| Medium | All seven custom descriptions are package-verified, but the service did not expose an accessibility tree to the available automation | Complete screen-reader and keyboard acceptance with the target browser and Windows high-contrast configuration |
+| Low | Representative service cross-filter and drill-through paths passed, but the complete tooltip matrix has not been exercised | Test every analytical tooltip with representative risk data |
 | Low | Local cold-start time was dominated by Performance Analyzer `Other` time | Repeat a cold-cache service test after the scheduled refresh and compare it with the warm Desktop baseline |
 
 ## Final report acceptance checklist
@@ -263,10 +270,12 @@ app validation remains a release acceptance check.
 - [x] Test clear-all-slicers behavior in the published primary-page flow.
 - [x] Test synchronized date slicers across the published primary-page flow.
 - [x] Test Merchant Risk to Merchant Detail drill-through and Back behavior in
-  the corrected local PBIX; repeat it in the service after publication.
+  both the corrected local PBIX and the published service release.
 - [x] Test a representative Executive Overview cross-filter interaction and
   confirm control-total restoration.
-- [ ] Test all tooltips and cross-filter interactions in the published release.
+- [x] Test a representative Merchant Risk cross-filter interaction in the
+  published release and confirm control-total restoration.
+- [ ] Test all analytical tooltips in the published release.
 - [x] Audit whether a phone layout currently exists.
 - [x] Build phone layouts for all four user-facing pages.
 - [ ] Validate the generated phone layouts on target physical devices.

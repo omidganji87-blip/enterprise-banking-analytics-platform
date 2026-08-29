@@ -725,13 +725,15 @@ Power BI KPI, keyboard-order, hidden-focus, and phone-layout remediation
 ✓
 ```
 
-The local platform controls are implemented and validated. Published-service
-rendering plus synchronized-date and clear-filter behavior were verified on
-2026-08-29. The local PBIX now includes exact-safe merchant labels, a tested
-Merchant Risk drill-through path, and package-verified descriptions for all
-seven active analytical visuals. Three automated PBIX package tests bring the
-local suite to 58 passing tests. Final production acceptance still requires a
+The local platform controls are implemented and validated. The corrected PBIX
+was published to Power BI Service on 2026-08-29. All three primary pages render,
+the hidden Merchant Detail page stays out of navigation, exact-safe
+`MRC-######` labels and the 19-digit source ID survive service rendering, and
+representative cross-filter, drill-through, Back, synchronized-date, and
+clear-filter paths pass. Package-verified descriptions cover all seven active
+analytical visuals, and three automated PBIX contract tests bring the local
+suite to 58 passing tests. Final production acceptance still requires a
 successful fully unattended 05:00 pipeline plus 06:00 Power BI Service refresh
-cycle, publication of the corrected PBIX, service tooltip/drill-through and
-assistive-technology/device QA, and governed security and distribution controls
-before real banking data is introduced.
+cycle, complete tooltip and assistive-technology/device QA, and business-defined
+security and governed distribution controls before real banking data is
+introduced.
