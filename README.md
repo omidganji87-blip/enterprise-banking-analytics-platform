@@ -727,7 +727,10 @@ Power BI KPI, keyboard-order, hidden-focus, and phone-layout remediation
 
 The local platform controls are implemented and validated. Published-service
 rendering plus synchronized-date and clear-filter behavior were verified on
-2026-08-29. Final production acceptance still requires a successful fully
-unattended 05:00 pipeline plus 06:00 Power BI Service refresh cycle, final
-drill-through/tooltip/accessibility/device QA, and governed security and
-distribution controls before real banking data is introduced.
+2026-08-29. The local PBIX now includes exact-safe merchant labels, a tested
+Merchant Risk drill-through path, and package-verified descriptions for all
+seven active analytical visuals. Final production acceptance still requires a
+successful fully unattended 05:00 pipeline plus 06:00 Power BI Service refresh
+cycle, publication of the corrected PBIX, service tooltip/drill-through and
+assistive-technology/device QA, and governed security and distribution controls
+before real banking data is introduced.

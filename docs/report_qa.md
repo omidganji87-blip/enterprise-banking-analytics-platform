@@ -58,7 +58,9 @@ acceptance.
   palette provide visual consistency.
 - Risk colors are reserved for fraud and exception information.
 - The drill-through page supplies evidence without overcrowding primary pages.
-- Visual titles are exposed through the Power BI accessibility tree.
+- Visual titles are exposed through the Power BI accessibility tree. Cards,
+  slicers, and navigation controls retain meaningful native accessible names,
+  while the seven analytical charts and evidence table have custom descriptions.
 
 ## Performance Analyzer baseline captured on 2026-08-29
 
@@ -172,6 +174,29 @@ from keyboard focus.
 | Merchant Risk | Page navigator; clear-all button; date slicer; KPI card group; Top 10 Fraudulent Merchants; Fraud by Merchant Category; header text |
 | Merchant Detail | Back button; date slicer; selected-merchant profile; KPI card group; Transaction Evidence Ledger; header text; hidden Fraud Concentration by Merchant State visual excluded from focus |
 
+## Visual alt-text remediation on 2026-08-29
+
+Custom screen-reader descriptions were added to every active analytical chart
+and to the transaction evidence table. The descriptions explain the visual's
+purpose, filter context, interpretation, and drill-through behavior where
+applicable:
+
+- Transaction Volume & Value Trend.
+- Transaction Method Mix.
+- Fraud & Error Event Trend.
+- Error Type Breakdown.
+- Top 10 Fraudulent Merchants.
+- Fraud by Merchant Category.
+- Transaction Evidence Ledger.
+
+The saved PBIX package contains exactly seven `altText` properties, and all
+seven expected descriptions were found in `Report/Layout`. Cards, slicers,
+navigation, and the Back control continue to use Power BI's native accessible
+names and values. The hidden Merchant Detail state-concentration visual remains
+excluded from focus and does not need a user-facing description. A final
+assistive-technology acceptance session is still required on the published
+release.
+
 ## Mobile layout remediation on 2026-08-29
 
 Power BI's phone-layout generator was run for all four report pages. Each phone
@@ -185,7 +210,7 @@ app validation remains a release acceptance check.
 
 | Priority | Finding | Required action |
 |---|---|---|
-| Medium | Custom alt text was not fully verified for every visual | Review each visual's General > Alt text setting and test the completed report with a screen reader |
+| Medium | Custom alt text is implemented locally, but end-to-end assistive-technology acceptance is pending | Publish the corrected PBIX and test all four pages with the target screen reader and browser combination |
 | Medium | Generated phone layouts have not been tested on target physical devices | Validate all four pages in the Power BI mobile app and refine spacing if needed |
 | Low | Merchant category and merchant bar charts are sparse for the current sample | Confirm labels, tooltips, and zero/small-count behavior using representative risk data |
 | High | Published service is stale after two gateway-offline refresh failures | Keep the signed-in gateway workstation powered on and verify the next unattended 05:00/06:00 cycle |
@@ -196,7 +221,8 @@ app validation remains a release acceptance check.
 ## Final report acceptance checklist
 
 - [x] Resolve Fraud Exposure truncation (`$2.62K`, thousands, two decimals).
-- [ ] Verify every visual title and custom alt-text description.
+- [x] Verify accessible names for cards, slicers, and navigation; add and
+  package-verify custom descriptions for all seven active analytical visuals.
 - [x] Audit the current keyboard tab order on all four pages.
 - [x] Reorder keyboard focus to navigation, slicers, KPIs, charts, then
   supporting detail.
