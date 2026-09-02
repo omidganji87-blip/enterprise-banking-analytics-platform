@@ -101,6 +101,25 @@ pipelines/Archive/
 
 
 # ============================================================
+# Private training, presentation, and media materials
+# ============================================================
+
+training/
+training_build/
+presentations/
+slides/
+
+*.ppt
+*.pptx
+*.pps
+*.ppsx
+*.mp3
+*.wav
+*.m4a
+*.aac
+
+
+# ============================================================
 # Temporary files
 # ============================================================
 

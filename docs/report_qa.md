@@ -13,8 +13,10 @@ acceptance.
   Risk.
 - Synchronized date-range context and a selected-date-range indicator.
 - Clear-all-slicers control.
-- Transaction Count, Total Transaction Amount, Average Transaction Amount,
-  Fraud Rate, and Amount YoY Growth cards.
+- Transaction Count, Total Transaction Amount, Fraud Rate, Amount YoY Growth,
+  and Transaction Count YoY Growth cards.
+- Dynamic executive decision brief with risk direction, amount growth, fraud
+  and error rate movement, and the current data-coverage date.
 - Transaction Volume & Value Trend combination chart.
 - Transaction Method Mix donut chart.
 
@@ -29,8 +31,10 @@ acceptance.
 ### 3. Merchant Risk
 
 - Date context and primary navigation remain consistent.
-- Transaction Count, Total Transaction Amount, Average Transaction Amount,
-  Fraud Rate, and Fraud Transaction Count cards.
+- Transaction Count, Total Transaction Amount, Fraud Rate, Fraud Transaction
+  Count, and Top 10 Fraud Exposure Share cards.
+- Dynamic merchant-risk brief with fraudulent-merchant count, top-10 exposure
+  concentration, total exposure, and portfolio fraud rate.
 - Fraud by Merchant Category (MCC) bar chart.
 - Top 10 Fraudulent Merchants bar chart.
 
@@ -39,8 +43,10 @@ acceptance.
 - Drill-through page is omitted from the primary page navigator.
 - Back control is present.
 - Merchant context is shown in the page header.
-- Transaction Count, Total Transaction Amount, Average Transaction Amount,
-  Fraud Rate, and Fraud Transaction Count cards.
+- Transaction Count, Total Transaction Amount, Selected Merchant Fraud Rate,
+  Portfolio Fraud Rate, and Merchant Risk Tier cards. The selected and portfolio
+  rates are shown side by side so drill-through context cannot be mistaken for
+  the portfolio baseline.
 - Transaction Evidence Ledger provides transaction-level detail.
 - The local report now uses `merchant_display_label` as the drill-through key
   and as the first column of the evidence ledger. The ledger header is renamed
@@ -49,6 +55,48 @@ acceptance.
 - A local end-to-end drill-through from `MRC-000028` returned three matching
   evidence rows, preserved the compact label, displayed the exact source ID in
   the merchant profile, and returned to Merchant Risk through the Back control.
+
+## Executive decision-support enhancement on 2026-09-01
+
+The PBIX was upgraded from descriptive monitoring to comparison- and
+action-oriented reporting without changing the serving contract. The saved
+semantic model now contains 37 explicit measures and was republished to Power BI
+Service on 2026-09-01, replacing the prior semantic model and its linked report.
+
+- Added prior-year transaction count and growth, prior-year fraud and error
+  rates, basis-point changes, fraud-exposure rate, risk direction, data coverage,
+  and a dynamic executive decision summary.
+- Replaced the lower-value Executive Overview average-amount card with
+  Transaction Count YoY Growth while retaining Amount YoY Growth.
+- Added a compact Risk & Exceptions brief that combines direction, fraud rate,
+  fraud exposure, error rate, and their year-over-year changes.
+- Added merchant exposure share, exposure rank, risk tier, risk insight,
+  fraudulent-merchant count, top-10 fraud exposure, top-10 concentration, and a
+  dynamic merchant-risk summary.
+- Replaced the Merchant Risk average-amount card with Top 10 Fraud Exposure
+  Share. The current sample shows 22 merchants with fraud events and 78.92% of
+  total fraud exposure concentrated in the top 10.
+- Replaced the Merchant Detail average-amount card with Merchant Risk Tier. The
+  drill-through control merchant `MRC-000028` renders as **Critical**, retains
+  three evidence rows and $162.11 exposure, and displays its full 100.00% fraud
+  rate without truncation.
+- Replaced the redundant Merchant Detail fraud-transaction-count card with a
+  portfolio benchmark. For `MRC-000028`, **Selected Merchant Fraud Rate** is
+  100.00% while **Portfolio Fraud Rate** is 0.14%; the latter deliberately
+  removes merchant filters but continues to respect the selected date context.
+- Adjusted the Risk & Exceptions and Merchant Risk briefing widths so the full
+  command-center title remains visible while the summary text stays in the
+  header band.
+
+Targeted DAX QA completed successfully in 350.1 ms. It confirmed the original
+35-measure enhancement, data coverage through 2020-02-28, an `Improving`
+current executive risk direction, a 78.92% top-10 fraud-exposure share,
+populated 2019 prior-year comparisons, and a `Critical` tier for `MRC-000028`.
+The selected-merchant and portfolio comparison measures were then added and
+queried successfully, bringing the published model to 37 explicit measures.
+All four pages were reopened in Power BI Desktop and visually inspected after
+the model updates. The PBIX was saved and successfully republished to My
+workspace on 2026-09-01, replacing the prior semantic model and linked report.
 
 ## Confirmed design strengths
 
